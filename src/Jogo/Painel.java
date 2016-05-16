@@ -8,50 +8,127 @@ package Jogo;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GraphicsEnvironment;
+import java.awt.MouseInfo;
+import java.awt.geom.Point2D;
 import java.awt.RenderingHints;
-import java.util.ArrayList;
 import javax.swing.JPanel;
 
 /**
  *
  * @author Megas
  */
-public class Painel extends JPanel{
-    private final ArrayList<Forma> lista;
-    private final int largura = 11000;
-    private final int altura = 11000;
+public class Painel extends JPanel implements Runnable{
+    private Thread t;
+    private final Esfera lista[];
+    private final int tamanho = 11000;
     private int tamanhoInicialBolas;
-    private Esfera jogador;
+    private Jogador jogador;
+    private final int velocidade = 50;
+    private final int nBolas = 7000;
     
     public Painel()
     {
         super();
+        t = new Thread(this);
         this.setBackground(Color.white);
-        lista = new ArrayList();
+        lista = new Esfera[nBolas];
     }
     
     public void inserirTudo()
     {
         tamanhoInicialBolas = (this.getWidth()+this.getHeight())/6;
-        for(int i = 0; i < 7000;i++)
-            this.inserir();
-        inserirJogador(tamanhoInicialBolas);
+        float r,g,b;
+        for(int i = 0; i < nBolas;i++)
+        {
+            r = (float)Math.random();
+            g = (float)Math.random();
+            b = (float)Math.random();
+            if(r <= 0.5 && g <= 0.5 && b <= 0.5)
+                r = (float) 0.75;
+            lista[i] = new Esfera(Math.random()*(tamanho), Math.random()*(tamanho), tamanhoInicialBolas, new Color(r,g,b));
+        }
+        inserirJogador();
     }
     
-    public final void inserirJogador(int raio)
+    public final void inserirJogador()
     {
-       jogador = new Esfera(this.getWidth(), this.getHeight(), raio, new Color((float)Math.random(), (float)Math.random(), (float)Math.random()));
+       Point2D p = GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();
+       jogador = new Jogador(p, 50);
     }
     
-    public final void inserir()
+    public void jogar()
     {
-        float r = (float)Math.random();
-        float g = (float)Math.random();
-        float b = (float)Math.random();
-        if(r <= 0.5 && g <= 0.5 && b <= 0.5)
-            r = (float) 0.75;
-        lista.add(new Esfera(Math.random()*(largura), Math.random()*(altura), tamanhoInicialBolas, new Color(r,g,b)));
+        t.start();
     }
+    
+    public void updateBolas(double x, double y)
+    {
+        for(int i = 0; i < nBolas; i++)
+        {
+            lista[i].setX(x);
+            lista[i].setY(y);
+        }
+    }
+    
+    public void moverJogador()
+    {
+        Point2D ponto = jogador.getPonto();
+        Point2D localizacao = jogador.getLocalizacao();
+        Point2D rato = MouseInfo.getPointerInfo().getLocation();
+        int raio = jogador.getRaio();
+        if((Math.abs(ponto.getX() - rato.getX()) <= raio) && (Math.abs(ponto.getY() - rato.getY()) <= raio))
+            return;
+        double ang = Math.atan2(rato.getX() - ponto.getX(), rato.getY() - ponto.getY());
+        double x = (velocidade * Math.sin(ang)) * -1;
+        double y = (velocidade * Math.cos(ang)) * -1;
+        if(localizacao.getX() <= 0)
+        {
+            if(x < 0)
+            {
+                updateBolas(x,y);
+                jogador.setLocalizacao((localizacao.getX()-x), (localizacao.getY()-y));
+            }
+            else
+            {
+                updateBolas(0,y);
+                jogador.setLocalizacao(localizacao.getX(), (localizacao.getY()-y));
+            }
+            return;
+        }
+        if(localizacao.getX() >= tamanho)
+        {
+            if(x > 0)
+            {
+                updateBolas(x,y);
+                jogador.setLocalizacao((localizacao.getX()-x), (localizacao.getY()-y));
+            }
+            else
+            {
+                updateBolas(0,y);
+                jogador.setLocalizacao(localizacao.getX(), (localizacao.getY()-y));
+            }
+            return;
+        }
+        updateBolas(x,y);
+        jogador.setLocalizacao((localizacao.getX()-x), (localizacao.getY()-y));
+    }
+       
+    @Override
+       public void run()
+       {
+           while(true)
+           {
+               moverJogador();
+               this.repaint();
+               try {
+                   Thread.sleep(15);
+               } catch (InterruptedException ex)
+               {
+                   //nao fazer nada
+               }
+           }
+       }
     
     @Override
     protected void paintComponent(Graphics g) {
@@ -61,12 +138,11 @@ public class Painel extends JPanel{
         g2d.setRenderingHint(
         RenderingHints.KEY_ANTIALIASING,
         RenderingHints.VALUE_ANTIALIAS_ON);//anti-aliasing
-        lista.stream().map((a) -> {
-            g2d.setColor(a.getCor());
-            return a;
-        }).forEach((a) -> {
-            g2d.fill(a.getForma());
-        });
-        g2d.fill(jogador.getForma());
+        for(int i = 0; i < nBolas; i++)
+        {
+            g2d.setColor(lista[i].getCor());
+            g2d.fill(lista[i].getCirculo());
+        }
+        g2d.fill(jogador.getCirculo());
     }
 }
