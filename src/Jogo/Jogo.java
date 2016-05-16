@@ -5,7 +5,8 @@
  */
 package Jogo;
 
-import java.awt.geom.Point2D;
+import java.awt.Color;
+import java.awt.Toolkit;
 import javax.swing.JFrame;
 
 public class Jogo extends JFrame{
@@ -13,9 +14,8 @@ public class Jogo extends JFrame{
     public Jogo() {
         super();
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
+        this.setUndecorated(false);
         this.setExtendedState(MAXIMIZED_BOTH);
-        Forma shape1 = new Esfera(new Point2D.Double(150,200), 200);
-        this.add(shape1);
     }
 
     public static void main(String args[]) {
@@ -46,7 +46,11 @@ public class Jogo extends JFrame{
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new Jogo().setVisible(true);
+                JFrame frame = new Jogo();
+                Painel tabuleiro = new Painel();
+                frame.add(tabuleiro);
+                frame.setVisible(true);
+                tabuleiro.inserirTudo();
             }
         });
     }
