@@ -5,14 +5,13 @@
  */
 package Jogo;
 
-import java.awt.Color;
-import java.awt.Toolkit;
 import javax.swing.JFrame;
 
 public class Jogo extends JFrame{
     
     public Jogo() {
         super();
+        this.setTitle("Agario");
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
         this.setUndecorated(false);
         this.setExtendedState(MAXIMIZED_BOTH);
@@ -51,6 +50,7 @@ public class Jogo extends JFrame{
                 frame.add(tabuleiro);
                 frame.setVisible(true);
                 tabuleiro.inserirTudo();
+                tabuleiro.jogar();
             }
         });
     }
